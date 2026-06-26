@@ -50,30 +50,30 @@ stages:
   dependsOn: Build
   condition: succeeded()
   jobs:
-    - deployment: DeployJob
+    - job: DeployJob                        # ✅ Regular job, NOT deployment job
       displayName: 'Deploy to Azure Static Web App'
       pool:
         vmImage: 'ubuntu-22.04'
-      environment: 'production'
-      strategy:
-        runOnce:
-          deploy:
-            steps:
+      steps:
 
-              # ✅ Step 1 — Download the artifact from Stage 1
-              - task: DownloadBuildArtifacts@1
-                inputs:
-                  buildType: 'current'
-                  downloadType: 'single'
-                  artifactName: 'react-build'
-                  downloadPath: '$(System.ArtifactsDirectory)'
-                displayName: '📥 Download Build Artifact'
+        # ✅ Step 1 — Download artifact into working directory
+        - task: DownloadBuildArtifacts@1
+          inputs:
+            buildType: 'current'
+            downloadType: 'single'
+            artifactName: 'react-build'
+            downloadPath: '$(System.DefaultWorkingDirectory)'
+          displayName: '📥 Download Build Artifact'
 
-              # ✅ Step 2 — Deploy pre-built files (no rebuild)
-              - task: AzureStaticWebApp@0
-                inputs:
-                  app_location: '$(System.ArtifactsDirectory)/react-build'
-                  output_location: ''
-                  skip_app_build: true
-                  azure_static_web_apps_api_token: $(AZURE_STATIC_WEB_APPS_TOKEN)
-                displayName: '☁ Deploy to Azure Static Web App'
+        # ✅ Step 2 — Confirm files exist (debug helper)
+        - script: ls -la $(System.DefaultWorkingDirectory)/react-build
+          displayName: '🔍 List Build Files'
+
+        # ✅ Step 3 — Deploy using RELATIVE path (avoids Docker /working_dir issue)
+        - task: AzureStaticWebApp@0
+          inputs:
+            app_location: 'react-build'     # ✅ Relative path — no /working_dir conflict
+            output_location: ''
+            skip_app_build: true
+            azure_static_web_apps_api_token: $(AZURE_STATIC_WEB_APPS_TOKEN)
+          displayName: '☁ Deploy to Azure Static Web App'
