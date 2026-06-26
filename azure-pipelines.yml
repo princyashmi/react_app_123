@@ -65,5 +65,5 @@ stages:
                 inputs:
                   app_location: '/'
                   output_location: 'build'
-                  azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_CALM_GROUND_0A0B16510 }}
+                  azure_static_web_apps_api_token: $(AZURE_STATIC_WEB_APPS_TOKEN)
                 displayName: '☁ Deploy to Azure Static Web App'
